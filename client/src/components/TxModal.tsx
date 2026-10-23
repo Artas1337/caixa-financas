@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { api } from '../api';
 import { useMonth } from '../month';
-import { centsToInput, parseMoney, todayISO } from '../format';
+import { centsToInput, maskMoney, parseMoney, todayISO } from '../format';
 import type { Category, Transaction, TxType } from '../types';
 
 interface Props {
@@ -86,7 +86,7 @@ export function TxModal({ tx, onClose, onSaved }: Props) {
               autoFocus
               placeholder="0,00"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={(e) => setAmount(maskMoney(e.target.value))}
               required
             />
           </div>

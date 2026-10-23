@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { api } from '../api';
-import { centsToInput, parseMoney } from '../format';
+import { centsToInput, maskMoney, parseMoney } from '../format';
 import type { Category, TxType } from '../types';
 
 interface BudgetInputProps {
@@ -37,7 +37,7 @@ function BudgetInput({ category, onSaved, onError }: BudgetInputProps) {
           inputMode="decimal"
           placeholder="sem limite"
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e) => setValue(maskMoney(e.target.value))}
           onBlur={commit}
           onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
         />

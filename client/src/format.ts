@@ -11,17 +11,35 @@ export function brlCompact(cents: number): string {
   return v === 0 ? '0' : `R$ ${v.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}`;
 }
 
-/** "1.234,56" | "1234.56" | "R$ 50" → centavos (ou null se inválido) */
+/** "1.234,56" | "1.111.111" | "1234.56" | "R$ 50" → centavos (ou null se inválido) */
 export function parseMoney(input: string): number | null {
-  let s = input.replace(/R\$|\s/g, '');
+  let s = input.replace(/R\$|\s/g, '').replace(/,$/, ''); // "49," (vírgula sem centavos) vale 49
   if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+  else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, ''); // pontos de milhar, sem centavos
   if (!/^\d+(\.\d{1,2})?$/.test(s)) return null;
   const cents = Math.round(Number(s) * 100);
   return cents > 0 ? cents : null;
 }
 
-/** centavos → "1234,56" para preencher campo de edição */
-export const centsToInput = (cents: number) => (cents / 100).toFixed(2).replace('.', ',');
+const MAX_INT_DIGITS = 10; // até R$ 9.999.999.999
+
+/**
+ * Máscara do campo de valor enquanto digita: "1111111" → "1.111.111", "49,9" fica "49,9".
+ * Vírgula separa os centavos (no máximo 2); um "." digitado no fim vira vírgula.
+ */
+export function maskMoney(raw: string): string {
+  let s = raw.replace(/[^\d,.]/g, '');
+  // a máscara nunca termina em ".", então um ponto no fim foi digitado agora: vale como vírgula
+  if (!s.includes(',') && s.endsWith('.')) s = `${s.slice(0, -1)},`;
+  const comma = s.indexOf(',');
+  const intDigits = (comma === -1 ? s : s.slice(0, comma)).replace(/\D/g, '').replace(/^0+(?=\d)/, '').slice(0, MAX_INT_DIGITS);
+  const intPart = intDigits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  if (comma === -1) return intPart;
+  return `${intPart || '0'},${s.slice(comma + 1).replace(/\D/g, '').slice(0, 2)}`;
+}
+
+/** centavos → "1.234,56" para preencher campo de edição */
+export const centsToInput = (cents: number) => maskMoney((cents / 100).toFixed(2).replace('.', ','));
 
 const monthDate = (month: string) => {
   const [y, m] = month.split('-').map(Number);
