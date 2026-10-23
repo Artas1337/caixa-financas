@@ -3,15 +3,29 @@ import { api } from '../api';
 import { centsToInput, parseMoney } from '../format';
 import type { Category, TxType } from '../types';
 
-function BudgetInput({ category, onSaved }: { category: Category; onSaved: (c: Category) => void }) {
+interface BudgetInputProps {
+  category: Category;
+  onSaved: (c: Category) => void;
+  onError: (message: string) => void;
+}
+
+function BudgetInput({ category, onSaved, onError }: BudgetInputProps) {
   const initial = category.budget_cents ? centsToInput(category.budget_cents) : '';
   const [value, setValue] = useState(initial);
 
   const commit = async () => {
     if (value === initial) return;
     const cents = value.trim() === '' ? null : parseMoney(value);
-    if (cents === null && value.trim() !== '') return setValue(initial);
-    onSaved(await api.updateCategory(category.id, { budgetCents: cents }));
+    if (cents === null && value.trim() !== '') {
+      setValue(initial);
+      return onError('Orçamento inválido. Use um valor como 500 ou 1.250,00');
+    }
+    try {
+      onSaved(await api.updateCategory(category.id, { budgetCents: cents }));
+    } catch (err) {
+      setValue(initial);
+      onError(err instanceof Error ? err.message : 'Erro');
+    }
   };
 
   return (
@@ -53,6 +67,7 @@ function CategoryList({ type, items, onChange }: { type: TxType; items: Category
     if (!confirm(`Excluir a categoria "${c.name}"?`)) return;
     try {
       await api.deleteCategory(c.id);
+      setError('');
       onChange();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro');
@@ -73,7 +88,16 @@ function CategoryList({ type, items, onChange }: { type: TxType; items: Category
               <strong>{c.name}</strong>
               <span className="muted">{c.tx_count} lançamento(s)</span>
             </div>
-            {type === 'expense' && <BudgetInput category={c} onSaved={onChange} />}
+            {type === 'expense' && (
+              <BudgetInput
+                category={c}
+                onSaved={() => {
+                  setError('');
+                  onChange();
+                }}
+                onError={setError}
+              />
+            )}
             <button
               type="button"
               className="icon-btn"
@@ -99,13 +123,21 @@ function CategoryList({ type, items, onChange }: { type: TxType; items: Category
 
 export function CategoriesPage() {
   const [categories, setCategories] = useState<Category[] | null>(null);
-  const load = () => api.listCategories().then(setCategories);
+  const [error, setError] = useState('');
+  const load = () =>
+    api
+      .listCategories()
+      .then((c) => {
+        setCategories(c);
+        setError('');
+      })
+      .catch((e) => setError(e.message));
 
   useEffect(() => {
     load();
   }, []);
 
-  if (!categories) return <div className="splash">Carregando…</div>;
+  if (!categories) return error ? <p className="form-error">{error}</p> : <div className="splash">Carregando…</div>;
 
   return (
     <div className="categories">

@@ -47,6 +47,9 @@ export const todayISO = () => {
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 };
 
+/** Mês atual no fuso local ("2026-10"). */
+export const currentMonth = () => todayISO().slice(0, 7);
+
 /** "2026-10-05" → "05/10" */
 export const dayMonth = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
 

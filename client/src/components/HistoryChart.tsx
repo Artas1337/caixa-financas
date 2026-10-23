@@ -6,6 +6,7 @@ const HEIGHT = 240;
 const PAD = { top: 12, right: 8, bottom: 28, left: 64 };
 const BAR_MAX = 24;
 const GAP = 2; // espaço em cor de superfície entre as barras do mesmo mês
+const TIP_HALF = 100; // metade da largura do tooltip, para ele não sair pelas bordas
 
 /** Escala com divisões "redondas" (1, 2, 2.5, 5 × 10^n). */
 function niceTicks(max: number, count = 4): number[] {
@@ -77,15 +78,22 @@ export function HistoryChart({ data, current }: { data: MonthTotals[]; current: 
               <text className={`tick ${d.month === current ? 'tick--current' : ''}`} x={cx} y={HEIGHT - 8} textAnchor="middle">
                 {monthShort(d.month)}
               </text>
-              {/* alvo de hover maior que as barras */}
+              {/* alvo de hover maior que as barras; também responde a toque e teclado (Tab) */}
               <rect
+                className="hit"
                 x={cx - band / 2}
                 y={PAD.top}
                 width={band}
                 height={plotH}
                 fill="transparent"
+                tabIndex={0}
+                role="button"
+                aria-label={`${monthLong(d.month)}: receitas ${brl(d.income)}, despesas ${brl(d.expense)}`}
                 onMouseEnter={() => setHover(i)}
                 onMouseLeave={() => setHover(null)}
+                onClick={() => setHover(i)}
+                onFocus={() => setHover(i)}
+                onBlur={() => setHover(null)}
               />
             </g>
           );
@@ -95,7 +103,7 @@ export function HistoryChart({ data, current }: { data: MonthTotals[]; current: 
       {hovered && hover !== null && (
         <div
           className="tooltip"
-          style={{ left: Math.min(PAD.left + band * hover + band / 2, width - 90), top: Math.max(y(Math.max(hovered.income, hovered.expense)) - 8, 40) }}
+          style={{ left: Math.max(TIP_HALF, Math.min(PAD.left + band * hover + band / 2, width - TIP_HALF)), top: Math.max(y(Math.max(hovered.income, hovered.expense)) - 8, 40) }}
         >
           <strong>{monthLong(hovered.month)}</strong>
           <span><i className="swatch swatch--income" />Receitas <b>{brl(hovered.income)}</b></span>

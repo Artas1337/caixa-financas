@@ -19,7 +19,7 @@ export function TransactionsPage() {
   const filters: TxFilters = { month, type: type || undefined, categoryId: categoryId || undefined, q: q.trim() || undefined };
 
   useEffect(() => {
-    api.listCategories().then(setCategories).catch(() => {});
+    api.listCategories().then(setCategories).catch((e) => setError(e.message));
   }, []);
 
   useEffect(() => {
@@ -28,7 +28,11 @@ export function TransactionsPage() {
     const t = setTimeout(() => {
       api
         .listTransactions(filters)
-        .then((r) => alive && setRows(r))
+        .then((r) => {
+          if (!alive) return;
+          setRows(r);
+          setError('');
+        })
         .catch((e) => setError(e.message));
     }, 200);
     return () => {
@@ -40,8 +44,12 @@ export function TransactionsPage() {
 
   const remove = async (tx: Transaction) => {
     if (!confirm(`Excluir "${tx.description}"?`)) return;
-    await api.deleteTransaction(tx.id);
-    bump();
+    try {
+      await api.deleteTransaction(tx.id);
+      bump();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erro');
+    }
   };
 
   const income = rows?.filter((r) => r.type === 'income').reduce((s, r) => s + r.amount_cents, 0) ?? 0;

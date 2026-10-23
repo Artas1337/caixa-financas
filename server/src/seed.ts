@@ -7,7 +7,7 @@ import { dirname } from 'node:path';
 import bcrypt from 'bcryptjs';
 import { openDatabase, transaction } from './db.js';
 import { seedCategories } from './categories.js';
-import { shiftMonth } from './transactions.js';
+import { shiftMonth, todayLocal } from './transactions.js';
 
 const DB_FILE = process.env.DB_FILE ?? 'data/caixa.db';
 const EMAIL = 'demo@caixa.test';
@@ -37,10 +37,14 @@ transaction(db, () => {
   const insert = db.prepare(
     'INSERT INTO transactions (user_id, category_id, description, amount_cents, date) VALUES (?, ?, ?, ?, ?)',
   );
-  const add = (month: string, day: number, desc: string, category: string, cents: number) =>
-    insert.run(userId, cat(category), desc, cents, `${month}-${String(day).padStart(2, '0')}`);
+  const today = todayLocal();
+  // Nada no futuro: o demo mostra só o que "já aconteceu" no mês atual.
+  const add = (month: string, day: number, desc: string, category: string, cents: number) => {
+    const date = `${month}-${String(day).padStart(2, '0')}`;
+    if (date <= today) insert.run(userId, cat(category), desc, cents, date);
+  };
 
-  const now = new Date().toISOString().slice(0, 7);
+  const now = today.slice(0, 7);
   for (let i = 5; i >= 0; i--) {
     const m = shiftMonth(now, -i);
     add(m, 5, 'Bolsa de estágio', 'Salário', 220000);

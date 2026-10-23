@@ -22,8 +22,9 @@ export function DashboardPage() {
         if (!alive) return;
         setSummary(s);
         setRecent(txs.slice(0, 6));
+        setError('');
       })
-      .catch((e) => setError(e.message));
+      .catch((e) => alive && setError(e.message));
     return () => {
       alive = false;
     };
@@ -45,7 +46,7 @@ export function DashboardPage() {
       <section className="panel panel--wide">
         <header className="panel__head">
           <h2>Últimos 6 meses</h2>
-          <p className="muted">Passe o mouse sobre um mês para ver os valores</p>
+          <p className="muted">Toque ou passe o mouse sobre um mês para ver os valores</p>
         </header>
         <HistoryChart data={summary.history} current={month} />
       </section>

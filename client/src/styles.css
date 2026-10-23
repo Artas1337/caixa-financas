@@ -265,7 +265,9 @@ input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px v
     position: sticky; z-index: 10; height: auto; flex-direction: row; align-items: center; gap: 12px;
     padding: 10px 16px; border-right: 0; border-bottom: 1px solid var(--border); overflow-x: auto;
   }
-  .nav { flex-direction: row; }
+  .nav { flex-direction: row; flex: 1; min-width: 0; overflow-x: auto; }
+  .nav__link { white-space: nowrap; }
+  .sidebar__user { flex: none; }
   .sidebar__user div { display: none; }
   .main { padding: 20px 16px 40px; }
   .sidebar .logo { gap: 0; font-size: 0; }
@@ -277,6 +279,20 @@ input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px v
   .tx-table th:nth-child(3), .tx-table td:nth-child(3) { display: none; }
   .cat-bars__row { grid-template-columns: 90px 1fr auto; }
   .cat-list li { flex-wrap: wrap; }
+}
+
+@media (max-width: 600px) {
+  .sidebar { gap: 8px; padding: 10px 12px; overflow-x: visible; }
+  .nav { gap: 0; }
+  .nav__link { padding: 6px 8px; font-size: 14px; }
+
+  /* Tabela vira lista: data · descrição · valor, com as ações numa linha abaixo */
+  .tx-table thead { display: none; }
+  .tx-table tr { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 4px 12px; padding: 10px 0; border-bottom: 1px solid var(--grid); }
+  .tx-table tr:last-child { border-bottom: 0; }
+  .tx-table td { padding: 0; border: 0; }
+  .tx-table .row-actions { grid-column: 1 / -1; }
+  .filters select { flex: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {

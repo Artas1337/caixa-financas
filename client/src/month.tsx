@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { currentMonth } from './format';
 
 interface MonthContextValue {
   month: string;
@@ -11,7 +12,7 @@ interface MonthContextValue {
 const MonthContext = createContext<MonthContextValue | null>(null);
 
 export function MonthProvider({ children }: { children: ReactNode }) {
-  const [month, setMonth] = useState(() => new Date().toISOString().slice(0, 7));
+  const [month, setMonth] = useState(currentMonth);
   const [version, setVersion] = useState(0);
   const bump = useCallback(() => setVersion((v) => v + 1), []);
   const value = useMemo(() => ({ month, setMonth, version, bump }), [month, version, bump]);

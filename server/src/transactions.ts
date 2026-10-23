@@ -18,7 +18,13 @@ export function shiftMonth(month: string, delta: number): string {
 /** Intervalo [início, fim) em datas ISO, para usar o índice em `date`. */
 const monthRange = (month: string) => [`${month}-01`, `${shiftMonth(month, 1)}-01`] as const;
 
-const currentMonth = () => new Date().toISOString().slice(0, 7);
+/** Data de hoje no fuso local ("2026-10-22"); toISOString() usaria UTC e viraria o dia às 21h no Brasil. */
+export function todayLocal(now = new Date()): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
+const currentMonth = () => todayLocal().slice(0, 7);
 
 // ---------- Schemas ----------
 

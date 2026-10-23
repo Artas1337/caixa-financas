@@ -95,8 +95,11 @@ export const api = {
     const res = await send('GET', `/transactions/export.csv${qs({ ...f })}`);
     const url = URL.createObjectURL(await res.blob());
     const a = Object.assign(document.createElement('a'), { href: url, download: `lancamentos-${f.month ?? 'todos'}.csv` });
+    document.body.append(a);
     a.click();
-    URL.revokeObjectURL(url);
+    a.remove();
+    // revogar na hora pode cancelar o download em alguns navegadores
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   },
 
   listCategories: () => request<Category[]>('GET', '/categories'),

@@ -3,7 +3,7 @@ import request from 'supertest';
 import type { Express } from 'express';
 import { createApp } from '../src/app.js';
 import { openDatabase } from '../src/db.js';
-import { shiftMonth } from '../src/transactions.js';
+import { shiftMonth, todayLocal } from '../src/transactions.js';
 
 let app: Express;
 let auth: Record<string, string>;
@@ -26,10 +26,12 @@ beforeEach(async () => {
 });
 
 describe('utilitários', () => {
-  it('desloca meses atravessando o ano', () => {
+  it('desloca meses atravessando o ano e usa a data local', () => {
     expect(shiftMonth('2026-01', -1)).toBe('2025-12');
     expect(shiftMonth('2026-12', 1)).toBe('2027-01');
     expect(shiftMonth('2026-10', -5)).toBe('2026-05');
+    // 31/10 às 22h30 no fuso local ainda é outubro (em UTC já seria novembro no Brasil)
+    expect(todayLocal(new Date(2026, 9, 31, 22, 30))).toBe('2026-10-31');
   });
 });
 
