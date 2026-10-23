@@ -298,3 +298,7 @@ input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px v
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* ---------- Requisitos de senha (cadastro) ---------- */
+.pw-rules { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 12px; margin: -8px 0 0; padding: 0; list-style: none; font-size: 13px; color: var(--muted); }
+.pw-rules li.is-ok { color: var(--good); }

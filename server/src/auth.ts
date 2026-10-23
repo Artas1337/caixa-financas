@@ -25,10 +25,33 @@ interface UserRow {
   password_hash: string;
 }
 
+/** Provedores aceitos no cadastro: evita contas com domínios inventados (ex.: @nmdiosa.com). */
+export const EMAIL_DOMAINS = [
+  'gmail.com', 'googlemail.com',
+  'outlook.com', 'outlook.com.br', 'hotmail.com', 'hotmail.com.br', 'live.com', 'msn.com',
+  'yahoo.com', 'yahoo.com.br', 'ymail.com',
+  'icloud.com', 'me.com', 'mac.com',
+  'proton.me', 'protonmail.com',
+  'uol.com.br', 'bol.com.br', 'terra.com.br', 'ig.com.br',
+  'aol.com', 'gmx.com', 'zoho.com',
+];
+
 const registerSchema = z.object({
-  name: z.string().trim().min(2).max(60),
-  email: z.string().trim().toLowerCase().email(),
-  password: z.string().min(6).max(100),
+  name: z.string().trim().min(2, 'Nome precisa ter ao menos 2 letras').max(60),
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email('E-mail inválido')
+    .refine((e) => EMAIL_DOMAINS.includes(e.split('@')[1]), 'Use um e-mail de um provedor comum (Gmail, Outlook, Hotmail, iCloud, Yahoo…)'),
+  password: z
+    .string()
+    .min(10, 'A senha precisa ter ao menos 10 caracteres')
+    .max(100, 'A senha pode ter no máximo 100 caracteres')
+    .regex(/[a-z]/, 'A senha precisa de uma letra minúscula')
+    .regex(/[A-Z]/, 'A senha precisa de uma letra maiúscula')
+    .regex(/\d/, 'A senha precisa de um número')
+    .regex(/[^A-Za-z0-9]/, 'A senha precisa de um símbolo (ex.: ! @ # $)'),
 });
 
 const loginSchema = z.object({
@@ -56,7 +79,10 @@ export function authRouter(db: DB) {
   const router = Router();
 
   router.post('/register', (req, res) => {
-    const data = registerSchema.parse(req.body);
+    const parsed = registerSchema.safeParse(req.body);
+    // Mostra a regra que falhou (ex.: "A senha precisa de um número"), não só "Dados inválidos".
+    if (!parsed.success) throw new HttpError(400, parsed.error.issues[0].message);
+    const data = parsed.data;
     const exists = db.prepare('SELECT 1 FROM users WHERE email = ?').get(data.email);
     if (exists) throw new HttpError(409, 'E-mail já cadastrado');
 

@@ -11,8 +11,8 @@ let cats: { id: number; name: string; type: string }[];
 
 const catId = (name: string) => cats.find((c) => c.name === name)!.id;
 
-async function signUp(email = 'ana@teste.com') {
-  const res = await request(app).post('/api/auth/register').send({ name: 'Ana', email, password: 'segredo123' });
+async function signUp(email = 'ana@gmail.com') {
+  const res = await request(app).post('/api/auth/register').send({ name: 'Ana', email, password: 'Segredo#2026' });
   return { Authorization: `Bearer ${res.body.token}` };
 }
 
@@ -36,7 +36,16 @@ describe('utilitários', () => {
 });
 
 describe('categorias', () => {
-  it('cria categorias padrão no cadastro', () => {
+  it('valida e-mail e senha no cadastro e cria categorias padrão', async () => {
+    const register = (email: string, password: string) =>
+      request(app).post('/api/auth/register').send({ name: 'Caio', email, password });
+    const fake = await register('caio@nmdiosa.com', 'Segredo#2026');
+    expect(fake.status).toBe(400);
+    expect(fake.body.error).toContain('provedor comum');
+    expect((await register('caio@gmail.com', 'segredo123')).body.error).toContain('maiúscula');
+    expect((await register('caio@gmail.com', 'Curta#1')).body.error).toContain('10 caracteres');
+    expect((await register('caio@gmail.com', 'Segredo#2026')).status).toBe(201);
+
     expect(cats.filter((c) => c.type === 'income')).toHaveLength(3);
     expect(cats.filter((c) => c.type === 'expense')).toHaveLength(7);
   });
@@ -85,7 +94,7 @@ describe('lançamentos', () => {
 
   it('isola dados entre usuários', async () => {
     const tx = (await addTx('Mercado', 35000, '2026-10-06', 'Alimentação')).body;
-    const other = await signUp('bia@teste.com');
+    const other = await signUp('bia@gmail.com');
     expect((await request(app).get('/api/transactions').set(other)).body).toEqual([]);
     expect((await request(app).delete(`/api/transactions/${tx.id}`).set(other)).status).toBe(404);
     // Bia não pode usar categoria da Ana

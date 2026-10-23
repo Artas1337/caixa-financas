@@ -1,19 +1,26 @@
 import { useState, type FormEvent } from 'react';
 import { useAuth } from '../auth';
 import { Logo } from '../components/Logo';
+import { isCommonEmail, PASSWORD_RULES } from '../validation';
 
 export function AuthPage() {
   const { login, register } = useAuth();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [password, setPassword] = useState('');
   const isLogin = mode === 'login';
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     const email = String(form.get('email'));
-    const password = String(form.get('password'));
+    if (!isLogin) {
+      if (!isCommonEmail(email)) {
+        return setError('Use um e-mail de um provedor comum (Gmail, Outlook, Hotmail, iCloud, Yahoo…)');
+      }
+      if (!PASSWORD_RULES.every((r) => r.test(password))) return setError('A senha ainda não atende todos os requisitos');
+    }
     setError('');
     setBusy(true);
     try {
@@ -50,10 +57,25 @@ export function AuthPage() {
             name="password"
             type="password"
             required
-            minLength={isLogin ? 1 : 6}
+            minLength={isLogin ? 1 : 10}
             autoComplete={isLogin ? 'current-password' : 'new-password'}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            aria-describedby={isLogin ? undefined : 'password-rules'}
           />
         </label>
+        {!isLogin && (
+          <ul id="password-rules" className="pw-rules">
+            {PASSWORD_RULES.map((r) => {
+              const ok = r.test(password);
+              return (
+                <li key={r.label} className={ok ? 'is-ok' : ''}>
+                  <span aria-hidden="true">{ok ? '✓' : '•'}</span> {r.label}
+                </li>
+              );
+            })}
+          </ul>
+        )}
 
         {error && <p className="form-error" role="alert">{error}</p>}
 
