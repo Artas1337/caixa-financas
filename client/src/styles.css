@@ -218,6 +218,7 @@ input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px v
 .filters input { flex: 1; min-width: 160px; width: auto; }
 .totals { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-bottom: 8px; color: var(--muted); font-size: 13px; }
 .totals strong { color: var(--text); font-variant-numeric: tabular-nums; }
+.notice { margin-bottom: 12px; padding: 8px 12px; border-radius: 8px; background: var(--accent-soft); color: var(--text); font-size: 14px; }
 
 .segmented { display: inline-flex; padding: 4px; gap: 4px; border-radius: 12px; background: var(--field); border: 1px solid var(--border); }
 .segmented__opt { flex: 1; padding: 8px 14px; border: 0; border-radius: 9px; background: transparent; color: var(--text-2); font-weight: 600; cursor: pointer; transition: background .15s, color .15s; }

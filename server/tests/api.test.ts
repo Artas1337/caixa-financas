@@ -3,7 +3,7 @@ import request from 'supertest';
 import type { Express } from 'express';
 import { createApp } from '../src/app.js';
 import { openDatabase } from '../src/db.js';
-import { shiftMonth, todayLocal } from '../src/transactions.js';
+import { nextMonthSameDay, shiftMonth, todayLocal } from '../src/transactions.js';
 
 let app: Express;
 let auth: Record<string, string>;
@@ -32,6 +32,13 @@ describe('utilitários', () => {
     expect(shiftMonth('2026-10', -5)).toBe('2026-05');
     // 31/10 às 22h30 no fuso local ainda é outubro (em UTC já seria novembro no Brasil)
     expect(todayLocal(new Date(2026, 9, 31, 22, 30))).toBe('2026-10-31');
+  });
+
+  it('avança um mês mantendo o dia (ou o último dia do mês)', () => {
+    expect(nextMonthSameDay('2026-10-10')).toBe('2026-11-10');
+    expect(nextMonthSameDay('2026-01-31')).toBe('2026-02-28');
+    expect(nextMonthSameDay('2028-01-31')).toBe('2028-02-29');
+    expect(nextMonthSameDay('2026-12-15')).toBe('2027-01-15');
   });
 });
 
@@ -90,6 +97,17 @@ describe('lançamentos', () => {
     expect(await list('month=2026-10&type=expense')).toEqual(['Uber', 'Mercado']);
     expect(await list(`categoryId=${catId('Alimentação')}`)).toEqual(['Mercado', 'Mercado setembro']);
     expect(await list('q=mercado')).toHaveLength(2);
+  });
+
+  it('repete um lançamento no mês seguinte', async () => {
+    const tx = (await addTx('Aluguel', 150000, '2026-10-31', 'Moradia')).body;
+    const res = await request(app).post(`/api/transactions/${tx.id}/repeat`).set(auth);
+    expect(res.status).toBe(201);
+    expect(res.body).toMatchObject({ description: 'Aluguel', amount_cents: 150000, date: '2026-11-30', category_name: 'Moradia' });
+    expect(res.body.id).not.toBe(tx.id);
+
+    const other = await signUp('bia@gmail.com');
+    expect((await request(app).post(`/api/transactions/${tx.id}/repeat`).set(other)).status).toBe(404);
   });
 
   it('isola dados entre usuários', async () => {

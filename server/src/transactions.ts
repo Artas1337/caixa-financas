@@ -9,6 +9,13 @@ import { findCategory } from './categories.js';
 
 const monthSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'Use o formato AAAA-MM');
 
+/** "2026-01-31" + 1 mês → "2026-02-28" (ajusta para o último dia quando o mês é mais curto). */
+export function nextMonthSameDay(date: string): string {
+  const [y, m, d] = date.split('-').map(Number);
+  const lastDay = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+  return `${shiftMonth(date.slice(0, 7), 1)}-${String(Math.min(d, lastDay)).padStart(2, '0')}`;
+}
+
 export function shiftMonth(month: string, delta: number): string {
   const [y, m] = month.split('-').map(Number);
   const d = new Date(Date.UTC(y, m - 1 + delta, 1));
@@ -143,6 +150,15 @@ export function transactionsRouter(db: DB) {
       tx.id,
     );
     res.json(findTx(tx.id, req.userId));
+  });
+
+  /** Repete o lançamento no mês seguinte — útil para contas fixas (aluguel, assinaturas). */
+  router.post('/transactions/:id/repeat', (req, res) => {
+    const tx = findTx(Number(req.params.id), req.userId);
+    const { lastInsertRowid } = db
+      .prepare('INSERT INTO transactions (user_id, category_id, description, amount_cents, date) VALUES (?, ?, ?, ?, ?)')
+      .run(req.userId, tx.category_id, tx.description, tx.amount_cents, nextMonthSameDay(tx.date));
+    res.status(201).json(findTx(Number(lastInsertRowid), req.userId));
   });
 
   router.delete('/transactions/:id', (req, res) => {

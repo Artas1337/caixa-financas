@@ -3,11 +3,12 @@ import type { Transaction } from '../types';
 
 interface Props {
   rows: Transaction[];
+  onRepeat?: (tx: Transaction) => void;
   onEdit?: (tx: Transaction) => void;
   onDelete?: (tx: Transaction) => void;
 }
 
-export function TxTable({ rows, onEdit, onDelete }: Props) {
+export function TxTable({ rows, onRepeat, onEdit, onDelete }: Props) {
   if (rows.length === 0) return <p className="empty">Nenhum lançamento encontrado.</p>;
   const actions = onEdit || onDelete;
 
@@ -34,6 +35,16 @@ export function TxTable({ rows, onEdit, onDelete }: Props) {
             </td>
             {actions && (
               <td className="row-actions">
+                {onRepeat && (
+                  <button
+                    type="button"
+                    className="btn btn--ghost btn--sm"
+                    title="Cria uma cópia no mês seguinte"
+                    onClick={() => onRepeat(tx)}
+                  >
+                    Repetir ↻
+                  </button>
+                )}
                 {onEdit && <button type="button" className="btn btn--ghost btn--sm" onClick={() => onEdit(tx)}>Editar</button>}
                 {onDelete && (
                   <button type="button" className="icon-btn" aria-label={`Excluir ${tx.description}`} onClick={() => onDelete(tx)}>×</button>

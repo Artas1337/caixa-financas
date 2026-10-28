@@ -12,6 +12,7 @@ Aplicação full-stack para registrar receitas e despesas, definir orçamentos p
 - **Gráfico de 6 meses** (receitas × despesas) com tooltip ao passar o mouse
 - **Despesas por categoria** com marcador de orçamento e alerta quando estoura
 - **Lançamentos:** filtros por tipo, categoria e texto, totais do filtro, edição e exclusão
+- **Repetir no próximo mês** com um clique — ideal para contas fixas (ajusta 31/01 → 28/02)
 - **Exportação CSV** pronta para Excel (separador `;`, vírgula decimal, BOM UTF-8)
 - **Categorias** personalizáveis, com orçamento mensal opcional (só para despesas)
 - Cadastro/login com **JWT** + **bcrypt**; dados isolados por usuário
@@ -44,6 +45,7 @@ Aplicação full-stack para registrar receitas e despesas, definir orçamentos p
 | GET | `/api/summary?month=AAAA-MM` | Totais do mês, mês anterior, por categoria e histórico de 6 meses |
 | GET | `/api/transactions?month=&type=&categoryId=&q=` | Lista com filtros |
 | POST · PATCH · DELETE | `/api/transactions[/:id]` | CRUD de lançamentos |
+| POST | `/api/transactions/:id/repeat` | Copia o lançamento para o mês seguinte |
 | GET | `/api/transactions/export.csv` | Exporta CSV com os mesmos filtros |
 | GET · POST · PATCH · DELETE | `/api/categories[/:id]` | CRUD de categorias e orçamento |
 

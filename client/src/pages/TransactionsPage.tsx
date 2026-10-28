@@ -15,6 +15,13 @@ export function TransactionsPage() {
   const [q, setQ] = useState('');
   const [editing, setEditing] = useState<Transaction | null>(null);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+
+  useEffect(() => {
+    if (!notice) return;
+    const t = setTimeout(() => setNotice(''), 3500);
+    return () => clearTimeout(t);
+  }, [notice]);
 
   const filters: TxFilters = { month, type: type || undefined, categoryId: categoryId || undefined, q: q.trim() || undefined };
 
@@ -46,6 +53,16 @@ export function TransactionsPage() {
     if (!confirm(`Excluir "${tx.description}"?`)) return;
     try {
       await api.deleteTransaction(tx.id);
+      bump();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erro');
+    }
+  };
+
+  const repeat = async (tx: Transaction) => {
+    try {
+      const copy = await api.repeatTransaction(tx.id);
+      setNotice(`"${copy.description}" repetido em ${copy.date.split('-').reverse().join('/')}`);
       bump();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erro');
@@ -89,6 +106,7 @@ export function TransactionsPage() {
       </div>
 
       {error && <p className="form-error">{error}</p>}
+      {notice && <p className="notice" role="status">✓ {notice}</p>}
 
       {rows && (
         <p className="totals">
@@ -99,7 +117,7 @@ export function TransactionsPage() {
         </p>
       )}
 
-      {rows ? <TxTable rows={rows} onEdit={setEditing} onDelete={remove} /> : <div className="splash">Carregando…</div>}
+      {rows ? <TxTable rows={rows} onRepeat={repeat} onEdit={setEditing} onDelete={remove} /> : <div className="splash">Carregando…</div>}
 
       {editing && (
         <TxModal

@@ -88,6 +88,7 @@ export const api = {
   listTransactions: (f: TxFilters) => request<Transaction[]>('GET', `/transactions${qs({ ...f })}`),
   createTransaction: (data: TxInput) => request<Transaction>('POST', '/transactions', data),
   updateTransaction: (id: number, data: TxInput) => request<Transaction>('PATCH', `/transactions/${id}`, data),
+  repeatTransaction: (id: number) => request<Transaction>('POST', `/transactions/${id}/repeat`),
   deleteTransaction: (id: number) => request<void>('DELETE', `/transactions/${id}`),
 
   /** Baixa o CSV (precisa do token, então não dá pra ser um link simples). */
