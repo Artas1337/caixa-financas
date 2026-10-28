@@ -76,6 +76,10 @@ Variáveis de ambiente (opcionais): `API_PORT`, `DB_FILE` (padrão `data/caixa.d
 - Metas de economia
 - Deploy
 
+## Licença
+
+MIT — veja [LICENSE](LICENSE).
+
 ---
 
 Feito por **Arthur Martins** · [LinkedIn](https://linkedin.com/in/arthur-martins-2547553b6) · [GitHub](https://github.com/Artas1337)
